@@ -1,14 +1,8 @@
 package org.fogbowcloud.blowout.infrastructure.token;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.core.exception.BlowoutException;
 import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
@@ -18,9 +12,6 @@ import org.fogbowcloud.manager.occi.model.Token;
 public class KeystoneTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 
 	private static final Logger LOGGER = Logger.getLogger(KeystoneTokenUpdatePlugin.class);
-	private static final Token.User DEFAULT_USER = new Token.User("9999", "User");
-	private static final int DEFAULT_UPDATE_TIME = 6;
-	private static final TimeUnit DEFAULT_UPDATE_TIME_UNIT = TimeUnit.HOURS;
 
 	private static final String FOGBOW_KEYSTONE_USERNAME = AppPropertiesConstants.INFRA_AUTH_TOKEN_PREFIX
 			+ "keystone_username";
@@ -73,10 +64,10 @@ public class KeystoneTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 
 		HashMap<String, String> credentials = new HashMap<String, String>();
 
-		credentials.put(keystoneIdentityPlugin.AUTH_URL, authUrl);
-		credentials.put(keystoneIdentityPlugin.USERNAME, username);
-		credentials.put(keystoneIdentityPlugin.PASSWORD, password);
-		credentials.put(keystoneIdentityPlugin.TENANT_NAME, tenantname);
+		credentials.put(KeystoneIdentityPlugin.AUTH_URL, authUrl);
+		credentials.put(KeystoneIdentityPlugin.USERNAME, username);
+		credentials.put(KeystoneIdentityPlugin.PASSWORD, password);
+		credentials.put(KeystoneIdentityPlugin.TENANT_NAME, tenantname);
 		LOGGER.debug("Creating token update with USERNAME=" + username + " and PASSWORD=" + password);
 
 		Token token = keystoneIdentityPlugin.createToken(credentials);

@@ -30,7 +30,6 @@ import org.fogbowcloud.blowout.infrastructure.exception.InfrastructureException;
 import org.fogbowcloud.blowout.infrastructure.exception.RequestResourceException;
 import org.fogbowcloud.blowout.infrastructure.http.HttpWrapper;
 import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
-import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
 import org.fogbowcloud.blowout.infrastructure.token.AbstractTokenUpdatePlugin;
 import org.fogbowcloud.blowout.pool.AbstractResource;
@@ -39,7 +38,6 @@ import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.model.Token.User;
 import org.fogbowcloud.manager.occi.order.OrderAttribute;
 import org.fogbowcloud.manager.occi.order.OrderConstants;
-import org.fogbowcloud.manager.occi.order.OrderState;
 
 public class FogbowInfrastructureProvider implements InfrastructureProvider {
 
@@ -429,8 +427,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 			String sshInformation = instanceAttributes.get(INSTANCE_ATTRIBUTE_SSH_PUBLIC_ADDRESS_ATT);
 			String vcore = instanceAttributes.get(INSTANCE_ATTRIBUTE_VCORE);
 			String memorySize = instanceAttributes.get(INSTANCE_ATTRIBUTE_MEMORY_SIZE);
-			String diskSize = instanceAttributes.get(INSTANCE_ATTRIBUTE_DISKSIZE);
-			String memberId = instanceAttributes.get(REQUEST_ATTRIBUTE_MEMBER_ID);
 
 			// If any of these attributes are empty, then return invalid.
 			// TODO: add to "isStringEmpty diskSize and memberId when fogbow
@@ -498,15 +494,6 @@ public class FogbowInfrastructureProvider implements InfrastructureProvider {
 		AbstractTokenUpdatePlugin tokenUpdatePlugin = (AbstractTokenUpdatePlugin) clazz;
 		tokenUpdatePlugin.validateProperties();
 		return tokenUpdatePlugin;
-	}
-
-	private OrderState getRequestState(String requestValue) {
-		for (OrderState state : OrderState.values()) {
-			if (state.getValue().equals(requestValue)) {
-				return state;
-			}
-		}
-		return null;
 	}
 
 	public HttpWrapper getHttpWrapper() {

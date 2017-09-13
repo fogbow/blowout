@@ -18,8 +18,6 @@ import org.apache.log4j.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 
 public class Specification implements Serializable {
@@ -114,6 +112,8 @@ public class Specification implements Serializable {
 						sb.append(line);
 					}
 					spec.setPublicKey(sb.toString());
+					
+					brSpec.close();
 				}
 			}
 

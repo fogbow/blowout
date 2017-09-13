@@ -12,8 +12,6 @@ import java.util.Properties;
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
 import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
-import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
-import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor.MonitoringService;
 import org.fogbowcloud.blowout.infrastructure.provider.InfrastructureProvider;
 import org.fogbowcloud.blowout.pool.AbstractResource;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
@@ -78,7 +76,6 @@ public class TestResourceMonitor {
 		String orderIdA = "orderA";
 		
 		String resourceIdB = "resourceB";
-		String orderIdB = "orderB";
 		
 		Specification spec = new Specification("ImageA", "Fogbow", "myKeyA", "path");
 		

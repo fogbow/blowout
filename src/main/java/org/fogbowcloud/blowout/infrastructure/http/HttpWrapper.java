@@ -21,11 +21,6 @@ public class HttpWrapper {
 
     private static final int SERVER_SIDE_ERRO_MAX = 505;
 	private static final int CLIENT_SIDE_CODE_ERRO_INIT = 400;
-	private final HttpClient client;
-
-    public HttpWrapper() {
-        this.client = createHttpClient();
-    }
 
     private static HttpClient createHttpClient() {
 		return HttpClients.createMinimal();

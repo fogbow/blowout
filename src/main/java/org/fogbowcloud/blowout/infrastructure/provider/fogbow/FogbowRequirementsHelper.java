@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
+import org.fogbowcloud.blowout.pool.AbstractResource;
 
 import condor.classad.AttrRef;
 import condor.classad.ClassAdParser;
@@ -83,21 +84,21 @@ public class FogbowRequirementsHelper {
 					
 					if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_Glue2vCPU)) {
 						listAttrSearched.add(attr);
-						value = resource.getMetadataValue(resource.METADATA_VCPU);
+						value = resource.getMetadataValue(AbstractResource.METADATA_VCPU);
 					} 
 					else if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_Glue2RAM)) {
 						listAttrSearched.add(attr);
-						value = resource.getMetadataValue(resource.METADATA_MEN_SIZE);
+						value = resource.getMetadataValue(AbstractResource.METADATA_MEN_SIZE);
 					} 
 					else if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_Glue2disk)) {
-						value = resource.getMetadataValue(resource.METADATA_DISK_SIZE);
+						value = resource.getMetadataValue(AbstractResource.METADATA_DISK_SIZE);
 						if (value != null && !value.equals(ZERO) ) {
 							listAttrSearched.add(attr);							
 						}
 					} 
 					else if (attr.equals(METADATA_FOGBOW_REQUIREMENTS_1Glue2CloudComputeManagerID)) {
 						listAttrSearched.add(attr);
-						value = resource.getMetadataValue(resource.METADATA_LOCATION);
+						value = resource.getMetadataValue(AbstractResource.METADATA_LOCATION);
 					}
 					
 					env.push((RecordExpr) new ClassAdParser("[" + attr + " = " + value + "]").parse());

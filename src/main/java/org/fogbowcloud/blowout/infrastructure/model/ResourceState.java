@@ -15,7 +15,7 @@ public enum ResourceState {
 	}
 	
 	public ResourceState getResourceStateByDesc(String desc){
-		for(ResourceState state : this.values()){
+		for(ResourceState state : ResourceState.values()){
 			if(state.getDesc().equals(desc)){
 				return state;
 			}

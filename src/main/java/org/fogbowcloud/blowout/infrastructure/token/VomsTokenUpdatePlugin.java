@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Properties;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -24,8 +23,6 @@ public class VomsTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 	private static final String VOMS_SERVER = AppPropertiesConstants.INFRA_AUTH_TOKEN_PREFIX + "voms_server";
 	private static final Logger LOGGER = Logger.getLogger(VomsTokenUpdatePlugin.class);
 	private static final Token.User DEFAULT_USER = new Token.User("9999", "User");
-	private static final int DEFAULT_UPDATE_TIME = 6;
-	private static final TimeUnit DEFAULT_UPDATE_TIME_UNIT = TimeUnit.HOURS;
 
 	private final String vomsServer;
 	private final String password;

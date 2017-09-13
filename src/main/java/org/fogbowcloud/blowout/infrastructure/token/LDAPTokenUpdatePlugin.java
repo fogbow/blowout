@@ -49,13 +49,13 @@ public class LDAPTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 
 		HashMap<String, String> credentials = new HashMap<String, String>();
 
-		credentials.put(ldapIdentityPlugin.CRED_USERNAME, userName);
-		credentials.put(ldapIdentityPlugin.CRED_PASSWORD, password);
-		credentials.put(ldapIdentityPlugin.CRED_AUTH_URL, ldapUrl);
-		credentials.put(ldapIdentityPlugin.CRED_LDAP_BASE, ldapBase);
-		credentials.put(ldapIdentityPlugin.CRED_LDAP_ENCRYPT, encrypt);
-		credentials.put(ldapIdentityPlugin.CRED_PRIVATE_KEY, privateKeyPath);
-		credentials.put(ldapIdentityPlugin.CRED_PUBLIC_KEY, publicKeyPath);
+		credentials.put(LdapIdentityPlugin.CRED_USERNAME, userName);
+		credentials.put(LdapIdentityPlugin.CRED_PASSWORD, password);
+		credentials.put(LdapIdentityPlugin.CRED_AUTH_URL, ldapUrl);
+		credentials.put(LdapIdentityPlugin.CRED_LDAP_BASE, ldapBase);
+		credentials.put(LdapIdentityPlugin.CRED_LDAP_ENCRYPT, encrypt);
+		credentials.put(LdapIdentityPlugin.CRED_PRIVATE_KEY, privateKeyPath);
+		credentials.put(LdapIdentityPlugin.CRED_PUBLIC_KEY, publicKeyPath);
 
 		LOGGER.debug("Creating token update with USERNAME=" + userName + " and PASSWORD=" + password);
 

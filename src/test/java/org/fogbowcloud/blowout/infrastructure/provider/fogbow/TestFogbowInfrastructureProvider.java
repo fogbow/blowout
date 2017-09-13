@@ -12,7 +12,6 @@ import static org.mockito.Mockito.verify;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,9 +46,6 @@ public class TestFogbowInfrastructureProvider {
 	private final String FILE_RESPONSE_REQUEST_INSTANCE = "src/test/resources/requestId";
 
 
-	private static final String PRIVATE_KEY = "src/test/resources/privatekey";
-	private static final String PUBLIC_KEY = "src/test/resources/publickey";
-
 	@Rule
 	public final ExpectedException exception = ExpectedException.none();
 
@@ -74,7 +70,7 @@ public class TestFogbowInfrastructureProvider {
 		
 		httpWrapperMock = mock(HttpWrapper.class);
 		fogbowResourceDsMock = mock(FogbowResourceDatastore.class);
-		Date date = new Date(System.currentTimeMillis() + (long)Math.pow(10,9));
+
 		exec = new ScheduledCurrentThreadExecutorService();
 		fogbowInfrastructureProvider = spy(new FogbowInfrastructureProvider(properties, exec, tokenUpdatePluginMock));
 		fogbowInfrastructureProvider.setFrDatastore(fogbowResourceDsMock);
@@ -235,8 +231,6 @@ public class TestFogbowInfrastructureProvider {
 		String instanceIdMock = "instance01";
 		String memSizeMock = "1.0";
 		String coreSizeMock = "1";
-		String hostMock = "10.0.1.10";
-		String portMock = "8989";
 		String memberIdMock = "member01";
 
 		//Create Mock behavior for httpWrapperMock

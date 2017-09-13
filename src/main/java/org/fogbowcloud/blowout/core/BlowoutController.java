@@ -42,7 +42,7 @@ public class BlowoutController {
 	public BlowoutController(Properties properties) throws BlowoutException {
 		this.properties = properties;
 		try {
-			if (!this.checkProperties(properties)) {
+			if (!BlowoutController.checkProperties(properties)) {
 				throw new BlowoutException("Error on validate the file ");
 			}
 

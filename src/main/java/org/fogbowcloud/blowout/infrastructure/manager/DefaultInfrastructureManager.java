@@ -8,7 +8,6 @@ import java.util.Map.Entry;
 
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.model.Task;
-import org.fogbowcloud.blowout.core.model.TaskState;
 import org.fogbowcloud.blowout.infrastructure.exception.RequestResourceException;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
 import org.fogbowcloud.blowout.infrastructure.monitor.ResourceMonitor;
@@ -70,19 +69,6 @@ public class DefaultInfrastructureManager implements InfrastructureManager {
 		}
 
 		return filteredResources;
-
-	}
-
-	private List<Task> filterTasksByState(List<Task> tasks, TaskState taskState) {
-
-		List<Task> filteredTasks = new ArrayList<Task>();
-		for (Task task : tasks) {
-			if (taskState.equals(task.getState())) {
-				filteredTasks.add(task);
-			}
-		}
-
-		return filteredTasks;
 
 	}
 

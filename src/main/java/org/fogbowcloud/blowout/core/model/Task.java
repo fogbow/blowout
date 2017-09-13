@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.fogbowcloud.blowout.core.model.Command.Type;
-import org.fogbowcloud.blowout.pool.AbstractResource;
 import org.json.JSONObject;
 
 public interface Task extends Serializable{
@@ -57,8 +56,6 @@ public interface Task extends Serializable{
 	public TaskState getState();
 
 	public void setState(TaskState state);
-
-	public void setResource(AbstractResource resource);
 
 	public String getUUID();
 }

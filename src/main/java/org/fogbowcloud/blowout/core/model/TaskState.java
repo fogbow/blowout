@@ -16,7 +16,7 @@ public enum TaskState {
 	
 	public static TaskState getTaskStateFromDesc(String desc) throws Exception{
 		for (TaskState ts : values()) {
-			if(ts.getDesc().equals(ts)){
+			if(ts.getDesc().equals(desc)){
 				return ts;
 			}
 		}

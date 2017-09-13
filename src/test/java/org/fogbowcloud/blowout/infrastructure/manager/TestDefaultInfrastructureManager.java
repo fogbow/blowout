@@ -80,10 +80,6 @@ public class TestDefaultInfrastructureManager {
 		String resourceIdB = "Rsource02";
 		String resourceIdC = "Rsource03";
 		
-		String orderIdA = "order01";
-		String orderIdB = "order02";
-		String orderIdC = "order03";
-		
 		String taskIdA = "Task01";
 		String taskIdB = "Task02";
 		String taskIdC = "Task03";
@@ -93,11 +89,6 @@ public class TestDefaultInfrastructureManager {
 		Task taskA = new TaskImpl(taskIdA, spec, FAKE_UUID);
 		Task taskB = new TaskImpl(taskIdB, spec, FAKE_UUID);
 		Task taskC = new TaskImpl(taskIdC, spec, FAKE_UUID);
-		
-		//These are the resources returned when the InfrastructureManager ask for new resources.
-		AbstractResource newResourceA = new FogbowResource(resourceIdA, orderIdA, spec);
-		AbstractResource newResourceB = new FogbowResource(resourceIdB, orderIdB, spec);
-		AbstractResource newResourceC = new FogbowResource(resourceIdC, orderIdC, spec);
 		
 		final Queue<String> resourcesToReturn = new LinkedList<String>();
 		resourcesToReturn.add(resourceIdA);
@@ -134,7 +125,6 @@ public class TestDefaultInfrastructureManager {
 	public void testActOneReadyTaskOnePendingResource() throws Exception {
 		
 		String resourceId = "Rsource01";
-		String orderId = "order01";
 		String taskId = "Task01";
 		Specification spec = new Specification("Image", "Fogbow", "myKey", "path");
 

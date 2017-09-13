@@ -9,7 +9,6 @@ import static org.mockito.Mockito.verify;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
 import org.junit.Test;
@@ -26,7 +25,6 @@ public class TaskProcessImplTest {
 	public void testExecOneCommand() {
 		String taskId = FAKE_TASK_ID;
 		Specification spec = mock(Specification.class);
-		Properties properties = new Properties();
 		List<Command> commandList = new ArrayList<Command>();
 		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
 		FogbowResource resource = mock(FogbowResource.class);

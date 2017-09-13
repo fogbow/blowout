@@ -33,7 +33,6 @@ public class TestResourceIdDataStore {
 	private final String FAKE_RESOURCE_ID2 = "fakeResourceId2";
 	
 	private final String FAKE_INSTANCE_ID1 = "fakeInstanceId1";
-	private final String FAKE_INSTANCE_ID2 = "fakeInstanceId2";
 	
 	Properties properties = null;
 	FogbowResourceDatastore db = null; 

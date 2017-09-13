@@ -4,8 +4,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.spy;
 
-import java.util.Properties;
-
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.infrastructure.provider.fogbow.FogbowRequirementsHelper;
 import org.junit.After;
@@ -15,8 +13,6 @@ import org.junit.Test;
 public class TestFogbowResource {
 	
 	FogbowResource resource;
-	
-	private Properties properties;
 	
 	@Before
 	public void setUp() throws Exception {
@@ -29,8 +25,6 @@ public class TestFogbowResource {
 		
 		resource.getAllMetadata().clear();
 		resource = null;
-		properties = null;
-		
 	}
 	
 	@Test

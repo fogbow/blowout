@@ -116,9 +116,9 @@ public class ResourceMonitor {
 				if (ResourceState.IDLE.equals(resource.getState())) {
 					resolveIdleResource(resource);
 				} else if (ResourceState.BUSY.equals(resource.getState())) {
-					idleResources.remove(resource);
+					idleResources.remove(resource.getId());
 				} else if (ResourceState.FAILED.equals(resource.getState())) {
-					idleResources.remove(resource);
+					idleResources.remove(resource.getId());
 					boolean isAlive = this.checkResourceConnectivity(resource);
 					if(isAlive){
 						if(moveResourceToIdle(resource)){
@@ -127,7 +127,7 @@ public class ResourceMonitor {
 					}
 				} else if (ResourceState.TO_REMOVE.equals(resource.getState())) {
 					try {
-						idleResources.remove(resource);
+						idleResources.remove(resource.getId());
 						infraProvider.deleteResource(resource.getId());
 						resourcePool.removeResource(resource);
 					} catch (Exception e) {
@@ -159,7 +159,7 @@ public class ResourceMonitor {
 						if (expirationDate.before(currentDate)) {
 							LOGGER.warn("Removing resource "+resource.getId()+" due Idle time expired.");
 							resourcePool.updateResource(resource, ResourceState.TO_REMOVE);
-							idleResources.remove(resource);
+							idleResources.remove(resource.getId());
 						}
 					}
 				}

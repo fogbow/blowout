@@ -9,7 +9,6 @@ import java.util.UUID;
 
 import org.apache.log4j.Logger;
 import org.fogbowcloud.blowout.pool.AbstractResource;
-import org.fogbowcloud.manager.occi.model.Token.User;
 
 public class TaskProcessImpl implements TaskProcess {
 

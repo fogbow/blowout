@@ -21,8 +21,6 @@ import org.fogbowcloud.manager.occi.model.Token;
 
 public class NAFTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 	
-	private static final int DEFAULT_UPDATE_TIME = 6;
-	private static final TimeUnit DEFAULT_UPDATE_TIME_UNIT = TimeUnit.HOURS;
 	private static final String USERNAME_PARAMETER = "username";
 	private static final String PASSWORD_PARAMETER = "password";
 	public static final String NAF_IDENTITY_PRIVATE_KEY = AppPropertiesConstants.INFRA_AUTH_TOKEN_PREFIX

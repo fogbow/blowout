@@ -16,8 +16,6 @@ public abstract class Job implements Serializable {
 	
 	public static final Logger LOGGER = Logger.getLogger(Job.class);
 	
-	private String UUID = "";
-
 	public Job(List<Task> tasks) {
 		for(Task task : tasks){
 			addTask(task);
