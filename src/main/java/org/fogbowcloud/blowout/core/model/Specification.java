@@ -21,20 +21,14 @@ import org.json.JSONObject;
 import com.google.gson.Gson;
 
 public class Specification implements Serializable {
+	
 	private static final String REQUIREMENTS_MAP_STR = "requirementsMap";
-
 	private static final String USER_DATA_TYPE_STR = "userDataType";
-
 	private static final String USER_DATA_FILE_STR = "userDataFile";
-
 	private static final String CONTEXT_SCRIPT_STR = "contextScript";
-
 	private static final String PRIVATE_KEY_FILE_PATH_STR = "privateKeyFilePath";
-
 	private static final String PUBLIC_KEY_STR = "publicKey";
-
 	private static final String USERNAME_STR = "username";
-
 	private static final String IMAGE_STR = "image";
 
 	private static final Logger LOGGER = Logger.getLogger(Specification.class);
@@ -43,6 +37,7 @@ public class Specification implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = 5255295548723927267L;
+	
 	String image;
 	String username;
 	String privateKeyFilePath;
@@ -50,7 +45,7 @@ public class Specification implements Serializable {
 	String contextScript;
 	String userDataFile;
 	String userDataType;
-
+	
 	Map<String, String> requirements = new HashMap<String, String>();
 
 	public Specification(String image, String username, String publicKey, String privateKeyFilePath) {
@@ -68,83 +63,99 @@ public class Specification implements Serializable {
 	}
 
 	public void addRequirement(String key, String value) {
-		requirements.put(key, value);
+		this.requirements.put(key, value);
 	}
 
 	public String getRequirementValue(String key) {
-		return requirements.get(key);
+		return this.requirements.get(key);
 	}
 
 	public void putAllRequirements(Map<String, String> requirements) {
 		for (Entry<String, String> e : requirements.entrySet()) {
-			
 			this.requirements.put(e.getKey(), e.getValue());
 		}
 	}
 
 	public Map<String, String> getAllRequirements() {
-		return requirements;
+		return this.requirements;
 	}
 
 	public void removeAllRequirements() {
-		requirements = new HashMap<String, String>();
+		this.requirements = new HashMap<String, String>();
 	}
 
-	public static List<Specification> getSpecificationsFromJSonFile(String jsonFilePath) throws IOException {
+	public static List<Specification> getSpecificationsFromJSonFile(String jsonFilePath)
+			throws IOException {
 
 		List<Specification> specifications = new ArrayList<Specification>();
-		if (jsonFilePath != null && !jsonFilePath.isEmpty()) {
+		if (jsonFilePath != null && !jsonFilePath.trim().isEmpty()) {
 
-			BufferedReader br = new BufferedReader(new FileReader(jsonFilePath));
+			BufferedReader jsonFileStream = new BufferedReader(new FileReader(jsonFilePath));
 
 			Gson gson = new Gson();
-			specifications = Arrays.asList(gson.fromJson(br, Specification[].class));
-			br.close();
+			specifications = Arrays.asList(gson.fromJson(jsonFileStream, Specification[].class));
+			jsonFileStream.close();
 
-			for (Specification spec : specifications) {
+			for (Specification specification : specifications) {
 
-				File file = new File(spec.getPublicKey());
-				if (file.exists()) {
-					StringBuilder sb = new StringBuilder();
-					BufferedReader brSpec = new BufferedReader(new FileReader(file));
-					String line = "";
-					while ((line = brSpec.readLine()) != null && !line.isEmpty()) {
-						sb.append(line);
-					}
-					spec.setPublicKey(sb.toString());
+				File publicKeyFile = new File(specification.getPublicKey());
+				if (publicKeyFile.exists()) {
 					
-					brSpec.close();
+					StringBuilder publicKey = new StringBuilder();
+					BufferedReader publicKeyFileStream = new BufferedReader(
+							new FileReader(publicKeyFile));
+
+					String line;
+					do {
+						line = publicKeyFileStream.readLine();
+
+						if (line != null) {
+							publicKey.append(line);
+						}
+
+					} while (line != null && !line.trim().isEmpty());
+
+					specification.setPublicKey(publicKey.toString());
+
+					publicKeyFileStream.close();
 				}
 			}
-
 		}
 		return specifications;
 	}
 
 	public boolean parseToJsonFile(String jsonDestFilePath) {
 
-		List<Specification> spec = new ArrayList<Specification>();
-		spec.add(this);
-		return Specification.parseSpecsToJsonFile(spec, jsonDestFilePath);
+		List<Specification> specification = new ArrayList<Specification>();
+		specification.add(this);
+		try {
+			Specification.parseSpecsToJsonFile(specification, jsonDestFilePath);
+			return true;
+		} catch (Exception e) {
+			return false;
+		}
 	}
 
-	public static boolean parseSpecsToJsonFile(List<Specification> specs, String jsonDestFilePath) {
+	public static void parseSpecsToJsonFile(List<Specification> specs, String jsonDestFilePath) throws IOException {
 
-		if (jsonDestFilePath != null && !jsonDestFilePath.isEmpty()) {
+		if (jsonDestFilePath != null && !jsonDestFilePath.trim().isEmpty()) {
 
-			BufferedWriter bw;
-			try {
-				bw = new BufferedWriter(new FileWriter(jsonDestFilePath));
+			BufferedWriter jsonFileStream = null;
+			try {	
+				jsonFileStream = new BufferedWriter(new FileWriter(jsonDestFilePath));
 				Gson gson = new Gson();
 				String spectString = gson.toJson(specs);
-				bw.write(spectString);
-				bw.close();
-				return true;
+				jsonFileStream.write(spectString);
+				
 			} catch (IOException e) {
-				return false;
-			}
+				throw e;
+			} finally {
+				if (jsonFileStream != null) {
+					jsonFileStream.close();
+				}
+			}	
 		} else {
-			return false;
+			throw new IllegalArgumentException("Invalid JSON file path");
 		}
 	}
 

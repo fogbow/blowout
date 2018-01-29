@@ -20,29 +20,27 @@ public class TaskImpl implements Task {
 
 	private static final Logger LOGGER = Logger.getLogger(TaskImpl.class);
 
-	public static final String ENV_LOCAL_OUT_DIR = "";
-
+    public static final String METADATA_TASK_TIMEOUT = "task_timeout";
+    public static final String METADATA_MAX_RESOURCE_CONN_RETRIES = "max_conn_retries";
+    // The constants below are used on Arrebol
+    // TODO? move them into arrebol
 	public static final String METADATA_REMOTE_OUTPUT_FOLDER = "remote_output_folder";
 	public static final String METADATA_LOCAL_OUTPUT_FOLDER = "local_output_folder";
 	public static final String METADATA_SANDBOX = "sandbox";
 	public static final String METADATA_REMOTE_COMMAND_EXIT_PATH = "remote_command_exit_path";
-	public static final String METADATA_RESOURCE_ID = "resource_id";
-	public static final String METADATA_TASK_TIMEOUT = "task_timeout";
-	public static final String METADATA_MAX_RESOURCE_CONN_RETRIES = "max_conn_retries";
 
-	private boolean isFinished = false;
 	private String id;
 	private Specification spec;
-	private List<Command> commands = new ArrayList<Command>();
-	List<String> processes = new ArrayList<String>();
-	private Map<String, String> metadata = new HashMap<String, String>();
-	private boolean isFailed = false;
-	private int retries = -1;
-	private TaskState state;
-
-	private long startedRunningAt = Long.MAX_VALUE;
-
+    private TaskState state;
 	private String uuid;
+    private boolean isFailed;
+    private int retries;
+	private boolean isFinished;
+	private long startedRunningAt;
+
+	private List<Command> commands = new ArrayList<>();
+	private Map<String, String> metadata = new HashMap<>();
+    private List<String> processes = new ArrayList<>();
 
 
 	public TaskImpl(String id, Specification spec, String uuid) {
@@ -50,21 +48,42 @@ public class TaskImpl implements Task {
 		this.spec = spec;
 		this.state = TaskState.READY;
 		this.uuid = uuid;
+		this.retries = -1;
+		this.isFinished = false;
+		this.isFailed = false;
+		this.startedRunningAt = Long.MAX_VALUE;
 	}
 	
 	@Override
-	public void putMetadata(String attributeName, String value) {
-		metadata.put(attributeName, value);
+	public boolean checkTimeOuted() {
+		String timeOutRaw = this.getMetadata(METADATA_TASK_TIMEOUT);
+		if (timeOutRaw == null || timeOutRaw.trim().isEmpty()) {
+			return false;
+		}
+		long timeOut;
+		try {
+			timeOut = Long.parseLong(timeOutRaw);
+		} catch (NumberFormatException e) {
+			LOGGER.error("Timeout badly formated, ignoring it: ", e);
+			return false;
+		}
+        return (System.currentTimeMillis() - this.startedRunningAt) > timeOut;
 	}
 
 	@Override
-	public String getMetadata(String attributeName) {
-		return metadata.get(attributeName);
-	}
+	public boolean mayRetry() {
+        return this.getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES) != null && this.getRetries() <= Integer.parseInt(this.getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES));
+    }
 
 	@Override
-	public Specification getSpecification() {
-		return this.spec;
+	public List<Command> getCommandsByType(Type commandType) {
+		List<Command> commandsToReturn = new ArrayList<>();
+		for (Command command : getAllCommands()) {
+			if (command.getType().equals(commandType)) {
+				commandsToReturn.add(command);
+			}
+		}
+		return commandsToReturn;
 	}
 
 	@Override
@@ -76,26 +95,16 @@ public class TaskImpl implements Task {
 			taskClone.putMetadata(attribute, allMetadata.get(attribute));
 		}
 
-		List<Command> commands = getAllCommands();
-		for (Command command : commands) {
+		for (Command command : this.getAllCommands()) {
 			taskClone.addCommand(command);
 		}
 		return taskClone;
 	}
 
 	@Override
-	public List<Command> getAllCommands() {
-		return commands;
-	}
-
-	@Override
-	public Map<String, String> getAllMetadata() {
-		return metadata;
-	}
-
-	@Override
-	public String getId() {
-		return this.id;
+	public void startedRunning() {
+		this.startedRunningAt = System.currentTimeMillis();
+		this.retries++;
 	}
 
 	@Override
@@ -109,69 +118,53 @@ public class TaskImpl implements Task {
 	}
 
 	@Override
-	public List<Command> getCommandsByType(Type commandType) {
-		List<Command> commandsToReturn = new ArrayList<Command>();
-		for (Command command : getAllCommands()) {
-			if (command.getType().equals(commandType)) {
-				commandsToReturn.add(command);
-			}
-		}
-		return commandsToReturn;
-	}
-
-	@Override
-	public void addCommand(Command command) {
-		commands.add(command);		
-	}
-
-	@Override
 	public void fail() {
-		isFailed = true;
+		this.isFailed = true;
 	}
 
 	@Override
 	public boolean isFailed() {
-		return isFailed;
+		return this.isFailed;
 	}
 
 	@Override
-	public boolean checkTimeOuted() {
-		String timeOutRaw = getMetadata(METADATA_TASK_TIMEOUT);
-		if (timeOutRaw == null || timeOutRaw.isEmpty()){
-			return false;
-		}
-		long timeOut;
-		try {
-			timeOut = Long.parseLong(timeOutRaw);
-		} catch (NumberFormatException e){
-			LOGGER.error("Timeout badly formated, ignoring it: ", e);
-			return false;
-		}
-		if (System.currentTimeMillis() - this.startedRunningAt > timeOut){
-			return true;
-		} else {
-			return false;
-		}
-
+	public String getId() {
+		return this.id;
 	}
 
 	@Override
-	public void startedRunning() {
-		this.startedRunningAt = System.currentTimeMillis();
-
+	public void addProcessId(String procId) {
+		this.processes.add(procId);
 	}
 
 	@Override
-	public boolean mayRetry() {
-		if (getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES) != null) {
-			return getRetries() <= Integer.parseInt(getMetadata(METADATA_MAX_RESOURCE_CONN_RETRIES));
-		}
-		return false;
+	public List<String> getProcessId() {
+		return this.processes;
+	}
+
+	@Override
+	public TaskState getState() {
+		return this.state;
+	}
+
+	@Override
+	public void setState(TaskState state) {
+		this.state = state;
+	}
+
+	@Override
+	public String getUUID() {
+		return this.uuid;
+	}
+
+	@Override
+	public Specification getSpecification() {
+		return this.spec;
 	}
 
 	@Override
 	public int getRetries() { 
-		return retries;
+		return this.retries;
 	}
 
 	@Override
@@ -179,22 +172,34 @@ public class TaskImpl implements Task {
 		this.retries = retries;		
 	}
 
+	@Override
+	public void addCommand(Command command) {
+		this.commands.add(command);
+	}
 
 	@Override
-	public void addProcessId(String procId) {
-		this.processes.add(procId);
+	public List<Command> getAllCommands() {
+		return this.commands;
 	}
 	
 	@Override
 	public int getNumberOfCommands() {
-		return commands.size();
+		return this.commands.size();
 	}
 
+	@Override
+	public void putMetadata(String attributeName, String value) {
+		this.metadata.put(attributeName, value);
+	}
 
 	@Override
-	public List<String> getProcessId() {
-		
-		return this.processes;
+	public String getMetadata(String attributeName) {
+		return this.metadata.get(attributeName);
+	}
+
+	@Override
+	public Map<String, String> getAllMetadata() {
+		return this.metadata;
 	}
 	
 	@Override
@@ -221,12 +226,9 @@ public class TaskImpl implements Task {
 		} else if (!id.equals(other.id))
 			return false;
 		if (spec == null) {
-			if (other.spec != null)
-				return false;
-		} else if (!spec.equals(other.spec))
-			return false;
-		return true;
-	}
+            return other.spec == null;
+		} else return spec.equals(other.spec);
+    }
 	
 	public JSONObject toJSON() {
 		try {
@@ -279,19 +281,4 @@ public class TaskImpl implements Task {
 		return task;
 	}
 
-	@Override
-	public TaskState getState() {
-		return this.state;
-	}
-
-	@Override
-	public void setState(TaskState state) {
-		this.state = state;
-		
-	}
-
-	@Override
-	public String getUUID() {
-		return this.uuid;
-	}
 }

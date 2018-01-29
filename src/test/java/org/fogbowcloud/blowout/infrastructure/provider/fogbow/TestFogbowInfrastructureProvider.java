@@ -1,30 +1,26 @@
 package org.fogbowcloud.blowout.infrastructure.provider.fogbow;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.doNothing;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import org.fogbowcloud.blowout.core.model.Specification;
 import org.fogbowcloud.blowout.core.util.AppPropertiesConstants;
 import org.fogbowcloud.blowout.database.FogbowResourceDatastore;
 import org.fogbowcloud.blowout.infrastructure.exception.InfrastructureException;
+import org.fogbowcloud.blowout.infrastructure.exception.RequestResourceException;
 import org.fogbowcloud.blowout.infrastructure.http.HttpWrapper;
 import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
 import org.fogbowcloud.blowout.infrastructure.token.AbstractTokenUpdatePlugin;
+import org.fogbowcloud.blowout.infrastructure.model.AbstractResource;
 import org.fogbowcloud.manager.occi.model.Token;
 import org.fogbowcloud.manager.occi.order.OrderConstants;
 import org.fogbowcloud.manager.occi.order.OrderState;
@@ -35,18 +31,12 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.mockito.Mockito;
 
-
 public class TestFogbowInfrastructureProvider {
 
 	private static final String FAKE_DATA_FILE = "src/test/java/org/fogbowcloud/blowout/infrastructure/provider/fogbow/userDataMock";
-	private final String FILE_RESPONSE_NO_INSTANCE_ID = "src/test/resources/requestInfoWithoutInstanceId";
-	private final String FILE_RESPONSE_INSTANCE_ID = "src/test/resources/requestInfoWithInstanceId";
-	private final String FILE_RESPONSE_NO_SSH = "src/test/resources/instanceInfoWithoutSshInfo";
-	private final String FILE_RESPONSE_SSH = "src/test/resources/instanceInfoWithSshInfo";
-	private final String FILE_RESPONSE_REQUEST_INSTANCE = "src/test/resources/requestId";
 
 
-	@Rule
+    @Rule
 	public final ExpectedException exception = ExpectedException.none();
 
 	private FogbowInfrastructureProvider fogbowInfrastructureProvider; 
@@ -57,8 +47,7 @@ public class TestFogbowInfrastructureProvider {
 	private FogbowResourceDatastore fogbowResourceDsMock;
 
 	@Before
-	public void setUp() throws Exception {
-
+	public void setUp() {
 		//Initiating properties file.
 		this.generateDefaulProperties();
 		tokenUpdatePluginMock = mock(AbstractTokenUpdatePlugin.class);
@@ -74,11 +63,10 @@ public class TestFogbowInfrastructureProvider {
 		exec = new ScheduledCurrentThreadExecutorService();
 		fogbowInfrastructureProvider = spy(new FogbowInfrastructureProvider(properties, exec, tokenUpdatePluginMock));
 		fogbowInfrastructureProvider.setFrDatastore(fogbowResourceDsMock);
-		//doNothing().when(fogbowInfrastructureProvider).handleTokenUpdate(exec, "server", "password");
 	}    
 
 	@After
-	public void setDown() throws Exception {
+	public void setDown() {
 		httpWrapperMock = null;
 		fogbowInfrastructureProvider = null;
 	}
@@ -95,9 +83,7 @@ public class TestFogbowInfrastructureProvider {
 
 	@Test
 	public void requestResourceGetRequestIdTestSucess(){
-
 		try {
-			
 			String orderId = "order01";
 			
 			Specification specs = new Specification("imageMock", "UserName",
@@ -109,17 +95,14 @@ public class TestFogbowInfrastructureProvider {
 			
 			String resourceId = fogbowInfrastructureProvider.requestResource(specs);
 			assertNotNull(resourceId);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 			fail();
 		}
-
 	}
 
 	@Test
-	public void getResourceTestSucess() throws Exception{
-
+	public void getResourceTestSucess() throws RequestResourceException {
 		//Attributes
 		String requestIdMock = "request01";
 
@@ -127,7 +110,7 @@ public class TestFogbowInfrastructureProvider {
 		doReturn(requestIdMock).when(resource).getId();
 
 		//To avoid SSH Connection Erro when tries to test connection to a FAKE host.
-		doReturn(resource).when(fogbowInfrastructureProvider).getFogbowResource(Mockito.eq(requestIdMock));
+		doReturn(resource).when(fogbowInfrastructureProvider).getResource(Mockito.eq(requestIdMock));
 		doReturn(true).when(resource).checkConnectivity(); 
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
@@ -136,12 +119,10 @@ public class TestFogbowInfrastructureProvider {
 
 		assertNotNull(newResource);
 		assertEquals(requestIdMock, newResource.getId());
-
 	}
 
 	@Test
 	public void getFogbowResourceTestSucess() throws Exception{
-
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
@@ -172,20 +153,17 @@ public class TestFogbowInfrastructureProvider {
 
 		doReturn(true).when(fogbowResourceDsMock).deleteFogbowResourceById(resource);
 
-		FogbowResource newResource = fogbowInfrastructureProvider.getFogbowResource(resourceId);
+		AbstractResource newResource = fogbowInfrastructureProvider.getResource(resourceId);
 
 		assertNotNull(newResource.getId());
 		assertEquals(menSizeFormated, newResource.getMetadataValue(FogbowResource.METADATA_MEN_SIZE));
 		assertEquals(coreSizeMock, newResource.getMetadataValue(FogbowResource.METADATA_VCPU));
 		assertEquals(hostMock, newResource.getMetadataValue(FogbowResource.METADATA_SSH_HOST));
 		assertEquals(portMock, newResource.getMetadataValue(FogbowResource.METADATA_SSH_PORT));
-
-		newResource = null;
 	}
 
 	@Test
 	public void getFogbowResourceTestSucessB() throws Exception{
-
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
@@ -214,7 +192,7 @@ public class TestFogbowInfrastructureProvider {
 		doReturn(requestIdMock).when(resource).getId();
 		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FULFILLED);
 
-		FogbowResource newResource = fogbowInfrastructureProvider.getFogbowResource(resourceId);
+		AbstractResource newResource = fogbowInfrastructureProvider.getResource(resourceId);
 
 		assertEquals("\""+memberIdMock+"\"", newResource.getMetadataValue(FogbowResource.METADATA_LOCATION));
 		assertEquals(menSizeFormated, newResource.getMetadataValue(FogbowResource.METADATA_MEN_SIZE));
@@ -225,7 +203,6 @@ public class TestFogbowInfrastructureProvider {
 
 	@Test
 	public void getResourceTestNoInstanceId() throws Exception{
-
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
@@ -246,20 +223,20 @@ public class TestFogbowInfrastructureProvider {
 		FogbowResource resource = mock(FogbowResource.class);
 		doReturn(requestIdMock).when(resource).getId();
 
-		Map<String, FogbowResource> resourceMap = new HashMap<String, FogbowResource>();
+		Map<String, FogbowResource> resourceMap = new HashMap<>();
 		resourceMap.put(resource.getId(), resource);
 		
 		fogbowInfrastructureProvider.setResourcesMap(resourceMap);
-		
-		FogbowResource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
 
-		assertNull(newResource);
-
+		try {
+            fogbowInfrastructureProvider.getResource(requestIdMock);
+        } catch (RequestResourceException e) {
+		    // thrown correctly
+        }
 	}
 
 	@Test
 	public void getResourceTestNotFulfiled() throws Exception{
-
 		//Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
@@ -288,55 +265,57 @@ public class TestFogbowInfrastructureProvider {
 		resourceMap.put(resource.getId(), resource);
 		
 		fogbowInfrastructureProvider.setResourcesMap(resourceMap);
-		
-		FogbowResource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
 
-		assertNull(newResource);
-
+		try {
+            fogbowInfrastructureProvider.getResource(requestIdMock);
+        } catch (RequestResourceException e) {
+		    // thrown correctly
+        }
 	}
 
 	@Test
-	public void getResourceTestNoSShInformation() throws Exception{
-
-		//Attributes
+	public void getResourceTestNoSShInformation() throws Exception {
+		// Attributes
 		String requestIdMock = "request01";
 		String instanceIdMock = "instance01";
 		String memSizeMock = "1.0";
 		String coreSizeMock = "1";
 		String memberIdMock = "member01";
 
-		//Create Mock behavior for httpWrapperMock
-		//Creating response for request for resource.
+		// Create Mock behavior for httpWrapperMock
+		// Creating response for request for resource.
 		createDefaultRequestResponse(requestIdMock);
-		//Creating response for request for Instance ID
-		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock, OrderState.FULFILLED);
-		//Creating response for request for Instance Attributes
-		createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock, coreSizeMock);
+		// Creating response for request for Instance ID
+		createDefaulInstanceIdResponse(requestIdMock, instanceIdMock, memberIdMock,
+				OrderState.FULFILLED);
+		// Creating response for request for Instance Attributes
+		createDefaulInstanceAttributesResponseNoShh(requestIdMock, instanceIdMock, memSizeMock,
+				coreSizeMock);
 
-		Specification specs = new Specification("imageMock", "UserName",
-				"publicKeyMock", "privateKeyMock", FAKE_DATA_FILE, "userDataType");
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock",
+				"privateKeyMock", FAKE_DATA_FILE, "userDataType");
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.requestResource(specs);
-				
+
 		FogbowResource resource = mock(FogbowResource.class);
 		doReturn(requestIdMock).when(resource).getId();
-		
-		Map<String, FogbowResource> resourceMap = new HashMap<String, FogbowResource>();
+
+		Map<String, FogbowResource> resourceMap = new HashMap<>();
 		resourceMap.put(resource.getId(), resource);
-		
+
 		fogbowInfrastructureProvider.setResourcesMap(resourceMap);
 
-		FogbowResource newResource = fogbowInfrastructureProvider.getFogbowResource(requestIdMock);
-
-		assertNull(newResource);
-
+		try {
+		    fogbowInfrastructureProvider.getResource(requestIdMock);
+        } catch (RequestResourceException e) {
+		    // thrown correctly
+        }
 	}
 
 
 	@Test
 	public void deleteResourceTestSucess() throws Exception{
-
 		String requestIdMock = "requestId";
 		String instanceIdMock = "instance01";
 		String memberIdMock = "member01";
@@ -350,19 +329,18 @@ public class TestFogbowInfrastructureProvider {
 		doReturn("OK").when(httpWrapperMock).doRequest(Mockito.eq("delete"), Mockito.eq(urlEndpointInstanceDelete), 
 				Mockito.any(String.class), Mockito.any(List.class));
 		doReturn(true).when(fogbowResourceDsMock).deleteFogbowResourceById(resource);
+		doReturn(new HashMap<String, String>()).when(fogbowInfrastructureProvider).getFogbowRequestAttributes(anyString());
 
-		Map<String, FogbowResource> resourceMap = new HashMap<String, FogbowResource>();
+		Map<String, FogbowResource> resourceMap = new HashMap<>();
 		resourceMap.put(resource.getId(), resource);
 		
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.setResourcesMap(resourceMap);
 		fogbowInfrastructureProvider.deleteResource(resource.getId());
-
 	}
 
 	@Test
 	public void deleteResourceTestFail() throws Exception {
-
 		exception.expect(InfrastructureException.class);
 
 		String requestIdMock = "requestId";
@@ -380,64 +358,157 @@ public class TestFogbowInfrastructureProvider {
 
 		fogbowInfrastructureProvider.setHttpWrapper(httpWrapperMock);
 		fogbowInfrastructureProvider.deleteResource(resource.getId());
+	}
+	
+	@Test
+	public void testRecoverLastSession() throws RequestResourceException {
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock",
+				"privateKeyMock", FAKE_DATA_FILE, "userDataType");
+		List<FogbowResource> frList = new ArrayList<FogbowResource>();
+		frList.add(new FogbowResource("fakeid-01", "fakeorder-01", specs));
+		frList.add(new FogbowResource("fakeid-02", "fakeorder-02", specs));
+		doReturn(frList).when(this.fogbowResourceDsMock).getAllFogbowResources();
 
+		doNothing().when(this.fogbowInfrastructureProvider)
+				.updateResource(Mockito.any(FogbowResource.class));
+		
+		this.fogbowInfrastructureProvider.recoverLastSession(false);
+		
+		assertEquals(this.fogbowInfrastructureProvider.getResourcesMap().size(), 2);
+	}
+	
+	@Test
+	public void testRecoverLastSessionRemoving() throws RequestResourceException {
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock",
+				"privateKeyMock", FAKE_DATA_FILE, "userDataType");
+		List<FogbowResource> frList = new ArrayList<FogbowResource>();
+		frList.add(new FogbowResource("fakeid-01", "fakeorder-01", specs));
+		frList.add(new FogbowResource("fakeid-02", "fakeorder-02", specs));
+		doReturn(frList).when(this.fogbowResourceDsMock).getAllFogbowResources();
+
+		doNothing().when(this.fogbowInfrastructureProvider)
+				.updateResource(Mockito.any(FogbowResource.class));
+		
+		this.fogbowInfrastructureProvider.recoverLastSession(true);
+		
+		assertEquals(this.fogbowInfrastructureProvider.getResourcesMap().size(), 0);
+	}
+	
+	@Test
+	public void testRecoverLastSessionResourcesNotFound() throws RequestResourceException {
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock",
+				"privateKeyMock", FAKE_DATA_FILE, "userDataType");
+		List<FogbowResource> frList = new ArrayList<FogbowResource>();
+		frList.add(new FogbowResource("fakeid-01", "fakeorder-01", specs));
+		frList.add(new FogbowResource("fakeid-02", "fakeorder-02", specs));
+		doReturn(frList).when(this.fogbowResourceDsMock).getAllFogbowResources();
+		doReturn(true).when(this.fogbowResourceDsMock).deleteFogbowResourceById(Mockito.anyString());
+
+		doThrow(new RequestResourceException("FAKE-ERROR")).when(this.fogbowInfrastructureProvider)
+				.updateResource(Mockito.any(FogbowResource.class));
+
+		this.fogbowInfrastructureProvider.recoverLastSession(false);
+
+		assertEquals(this.fogbowInfrastructureProvider.getResourcesMap().size(), 0);
 	}
 
-	// ---- HELPER METHODS ---- //
+	@Test
+	public void testUpdateResource() throws RequestResourceException {
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock",
+				"privateKeyMock", FAKE_DATA_FILE, "userDataType");
+		FogbowResource resource = new FogbowResource("fakeid-01", "fakeorder-01", specs);
+		FogbowResource resourceInstaciated = new FogbowResource("fakeid-01", "fakeorder-01", specs);
+		resourceInstaciated.setInstanceId("fakeinstance-01");
 
-	private void createDefaultRequestResponse(String requestIdMokc) 
-			throws FileNotFoundException, IOException, Exception {
+		doReturn(resourceInstaciated).when(this.fogbowInfrastructureProvider)
+				.getResource(Mockito.anyString());
+
+		this.fogbowInfrastructureProvider.updateResource(resource);
+
+		assertEquals(resourceInstaciated.getInstanceId(), this.fogbowInfrastructureProvider
+				.getResourcesMap().get(resource.getId()).getInstanceId());
+	}
+
+	@Test
+	public void testUpdateResourceNull() throws RequestResourceException {
+		Specification specs = new Specification("imageMock", "UserName", "publicKeyMock",
+				"privateKeyMock", FAKE_DATA_FILE, "userDataType");
+		FogbowResource resource = new FogbowResource("fakeid-01", "fakeorder-01", specs);
+		FogbowResource resourceInstaciated = new FogbowResource("fakeid-01", "fakeorder-01", specs);
+		resourceInstaciated.setInstanceId("fakeinstance-01");
+
+		doReturn(null).when(this.fogbowInfrastructureProvider)
+				.getResource(Mockito.anyString());
+
+		this.fogbowInfrastructureProvider.updateResource(resource);
+
+		assertNull(this.fogbowInfrastructureProvider.getResourcesMap().get(resource.getId())
+				.getInstanceId());
+	}
+
+	private void createDefaultRequestResponse(String requestIdMokc) throws Exception {
 
 		String urlEndpointNewInstance = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/" + OrderConstants.TERM;
 
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new HashMap<>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMokc);
-		String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_REQUEST_INSTANCE, params);
+        String FILE_RESPONSE_REQUEST_INSTANCE = "src/test/resources/requestId";
+        String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_REQUEST_INSTANCE, params);
 
-		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(Mockito.any(String.class), Mockito.eq(urlEndpointNewInstance), 
-				Mockito.any(String.class), Mockito.any(List.class));
+		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(
+				Mockito.any(String.class),
+				Mockito.eq(urlEndpointNewInstance),
+				Mockito.any(String.class),
+				Mockito.any(List.class)
+		);
 	}
 
 	private void createDefaulInstanceIdResponse(String requestIdMock, String instanceIdMock, String location, OrderState requestState) 
-			throws FileNotFoundException, IOException, Exception {
-
+			throws Exception {
 		String urlEndpointRequestInformations = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/" + OrderConstants.TERM + "/"+ requestIdMock;
 
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new HashMap<>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
 		params.put(FogbowInfrastructureTestUtils.INSTANCE_TAG, instanceIdMock);
 		params.put(FogbowInfrastructureTestUtils.PROVIDER_MEMBER_TAG, location);
 		params.put(FogbowInfrastructureTestUtils.STATE_TAG, requestState.getValue());
-		String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_INSTANCE_ID, params);
+        String FILE_RESPONSE_INSTANCE_ID = "src/test/resources/requestInfoWithInstanceId";
+        String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_INSTANCE_ID, params);
 
-		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(Mockito.any(String.class), Mockito.eq(urlEndpointRequestInformations), 
-				Mockito.any(String.class), Mockito.any(List.class));
+		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(
+		        Mockito.any(String.class),
+                Mockito.eq(urlEndpointRequestInformations),
+				Mockito.any(String.class),
+                Mockito.any(List.class)
+        );
 	}
 
-	private void createDefaulRequestInstanceIdResponseNoId(String requestIdMock) 
-			throws FileNotFoundException, IOException, Exception {
-
+	private void createDefaulRequestInstanceIdResponseNoId(String requestIdMock) throws Exception {
 		String urlEndpointRequestInformations = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/" + OrderConstants.TERM + "/"+ requestIdMock;
 
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new HashMap<>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
-		String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_NO_INSTANCE_ID, params);
+        String FILE_RESPONSE_NO_INSTANCE_ID = "src/test/resources/requestInfoWithoutInstanceId";
+        String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_NO_INSTANCE_ID, params);
 
-		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(Mockito.any(String.class), Mockito.eq(urlEndpointRequestInformations), 
-				Mockito.any(String.class), Mockito.any(List.class));
+		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(
+		        Mockito.any(String.class),
+                Mockito.eq(urlEndpointRequestInformations),
+				Mockito.any(String.class),
+                Mockito.any(List.class)
+        );
 	}
 
 	private void createDefaulInstanceAttributesResponse(String requestIdMock, String instanceIdMock,
 			String memSizeMock, String coreSizeMock, String hostMock, String portMock)
-					throws FileNotFoundException, IOException, Exception {
-
+					throws Exception {
 		String urlEndpointInstanceAttributes = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new HashMap<>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
 		params.put(FogbowInfrastructureTestUtils.INSTANCE_TAG, instanceIdMock);
 		params.put(FogbowInfrastructureTestUtils.MEN_SIZE_TAG, memSizeMock);
@@ -445,33 +516,41 @@ public class TestFogbowInfrastructureProvider {
 		params.put(FogbowInfrastructureTestUtils.HOST_TAG, hostMock);
 		params.put(FogbowInfrastructureTestUtils.PORT_TAG, portMock);
 
-		String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_SSH, params);
+        String FILE_RESPONSE_SSH = "src/test/resources/instanceInfoWithSshInfo";
+        String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_SSH, params);
 
-		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(Mockito.any(String.class), Mockito.eq(urlEndpointInstanceAttributes), 
-				Mockito.any(String.class), Mockito.any(List.class));
+		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(
+		        Mockito.any(String.class),
+                Mockito.eq(urlEndpointInstanceAttributes),
+				Mockito.any(String.class),
+                Mockito.any(List.class)
+        );
 	}
 
 	private void createDefaulInstanceAttributesResponseNoShh(String requestIdMock, String instanceIdMock,
 			String memSizeMock, String coreSizeMock)
-					throws FileNotFoundException, IOException, Exception {
-
+					throws Exception {
 		String urlEndpointInstanceAttributes = properties.getProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL)
 				+ "/compute/" + instanceIdMock;
 
-		Map<String, String> params = new HashMap<String, String>();
+		Map<String, String> params = new HashMap<>();
 		params.put(FogbowInfrastructureTestUtils.REQUEST_ID_TAG, requestIdMock);
 		params.put(FogbowInfrastructureTestUtils.INSTANCE_TAG, instanceIdMock);
 		params.put(FogbowInfrastructureTestUtils.MEN_SIZE_TAG, memSizeMock);
 		params.put(FogbowInfrastructureTestUtils.CORE_SIZE_TAG, coreSizeMock);
 
-		String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_NO_SSH, params);
+        String FILE_RESPONSE_NO_SSH = "src/test/resources/instanceInfoWithoutSshInfo";
+        String fogbowResponse = FogbowInfrastructureTestUtils.createHttpWrapperResponseFromFile(FILE_RESPONSE_NO_SSH, params);
 
-		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(Mockito.any(String.class), Mockito.eq(urlEndpointInstanceAttributes), 
-				Mockito.any(String.class), Mockito.any(List.class));
+		doReturn(fogbowResponse).when(httpWrapperMock).doRequest(
+		        Mockito.any(String.class),
+                Mockito.eq(urlEndpointInstanceAttributes),
+				Mockito.any(String.class),
+                Mockito.any(List.class)
+        );
 	}
 
 	private void generateDefaulProperties(){
-
 		properties = new Properties();
 
 		properties.setProperty(AppPropertiesConstants.INFRA_IS_STATIC, "false");
@@ -482,7 +561,6 @@ public class TestFogbowInfrastructureProvider {
 		properties.setProperty(AppPropertiesConstants.INFRA_FOGBOW_MANAGER_BASE_URL, "100_02_01_01:8098");
 		properties.setProperty("fogbow.voms.server", "server");
 		properties.setProperty("fogbow.voms.certificate.password", "password");
-
 	}
-
+	
 }

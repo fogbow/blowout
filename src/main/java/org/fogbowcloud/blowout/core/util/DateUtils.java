@@ -4,9 +4,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class DateUtils {
-	
-	public static final String DATE_FORMAT_YYYY_MM_DD_HOUR = "yyyy-MM-dd HH:mm:ss"; 
-	
+
+	public static final String DATE_FORMAT_YYYY_MM_DD_HOUR = "yyyy-MM-dd HH:mm:ss";
+
 	public long currentTimeMillis() {
 		return System.currentTimeMillis();
 	}
@@ -25,16 +25,17 @@ public class DateUtils {
 		String expirationDate = dateFormat.format(new Date(dateMili));
 		return expirationDate;
 	}
-	
-	public static String formatElapsedTime(long millis){
-		
+
+	public static String formatElapsedTime(long millis) {
+
 		long ms = millis % 1000;
 		long second = (millis / 1000) % 60;
 		long minute = (millis / (1000 * 60)) % 60;
 		long hour = (millis / (1000 * 60 * 60)) % 24;
 		long days = (millis / (1000 * 60 * 60 * 24));
-		
-		return String.format("%02d Days %02d Hours %02d Minutes %02d Seconds %04d Ms", days, hour, minute, second, ms);
+
+		return String.format("%02d Days %02d Hours %02d Minutes %02d Seconds %04d Ms", days, hour,
+				minute, second, ms);
 	}
 
 }

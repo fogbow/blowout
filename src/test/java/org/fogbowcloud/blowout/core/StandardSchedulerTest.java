@@ -11,7 +11,7 @@ import org.fogbowcloud.blowout.core.model.TaskImpl;
 import org.fogbowcloud.blowout.core.monitor.TaskMonitor;
 import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
-import org.fogbowcloud.blowout.pool.AbstractResource;
+import org.fogbowcloud.blowout.infrastructure.model.AbstractResource;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -123,7 +123,7 @@ public class StandardSchedulerTest {
 		TaskMonitor taskMon = Mockito.mock(TaskMonitor.class);
 		Mockito.doNothing().when(taskMon).runTask(Mockito.any(Task.class), Mockito.any(AbstractResource.class));
 		StandardScheduler standardScheduler = new StandardScheduler(taskMon);
-		
+
 		List<Task> tasks = new ArrayList<Task>();
 		Specification specA = new Specification("imageA", "usernameA", "publicKeyA", "privateKeyFilePathA");
 		Specification specB = new Specification("imageB", "usernameB", "publicKeyB", "privateKeyFilePathB");
@@ -137,7 +137,7 @@ public class StandardSchedulerTest {
 		tasks.add(taskThreeRunning);
 		tasks.add(taskToRunning);
 		tasks.add(taskFiveRunning);
-		
+
 		AbstractResource resourceTwoRunning = new FogbowResource("idTwo", "orderIdTwo", specB);
 		resourceTwoRunning.setState(ResourceState.BUSY);
 		AbstractResource resourceThreeRunning = new FogbowResource("idThree", "orderIdThree", specB);
@@ -151,20 +151,20 @@ public class StandardSchedulerTest {
 		resources.add(resourceThreeRunning);
 		resources.add(resourceFourIdle);
 		resources.add(resourceFiveRunning);
-		
+
 		standardScheduler.runTask(taskTwoRunning, resourceTwoRunning);
 		standardScheduler.runTask(taskThreeRunning, resourceThreeRunning);
 		standardScheduler.runTask(taskFiveRunning, resourceFiveRunning);
 		int countRunningTaskBefore = 3;
-		
+
 		Assert.assertEquals(countRunningTaskBefore, standardScheduler.getRunningTasks().size());
-		
+
 		standardScheduler.act(tasks, resources);
-		
+
 		int addedTaskToRunning = 1;
 		Assert.assertEquals(countRunningTaskBefore + addedTaskToRunning, standardScheduler.getRunningTasks().size());
-		Assert.assertEquals(3, taskToRunning.getRetries());
+	    Assert.assertEquals(3, taskToRunning.getRetries());
 		Assert.assertEquals(0, taskTwoRunning.getRetries());
 	}
-	
+
 }

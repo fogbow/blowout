@@ -9,53 +9,53 @@ import org.json.JSONObject;
 
 public interface Task extends Serializable{
 
-	public Specification getSpecification();
+	Specification getSpecification();
 
-	public Task clone();
+	Task clone();
 
-	public String getId();
+	String getId();
 
-	public void finish();
+	void finish();
 	
-	public void fail();
+	void fail();
 
-	public boolean isFinished();
+	boolean isFinished();
 	
-	public boolean isFailed();
+	boolean isFailed();
 	
-	public boolean checkTimeOuted();
+	boolean checkTimeOuted();
 
-	public void addCommand(Command command);
+	void addCommand(Command command);
 	
-	public List<Command> getCommandsByType(Type commandType);
+	List<Command> getCommandsByType(Type commandType);
 	
-	public List<Command> getAllCommands();
+	List<Command> getAllCommands();
 	
-	public void startedRunning();
+	void startedRunning();
 
-	public void putMetadata(String attributeName, String value);
+	void putMetadata(String attributeName, String value);
 
-	public String getMetadata(String attributeName);
+	String getMetadata(String attributeName);
 	
-	public Map<String, String> getAllMetadata();
+	Map<String, String> getAllMetadata();
 	
-	public boolean mayRetry();
+	boolean mayRetry();
 
-	public int getRetries();
+	int getRetries();
 
-	public void setRetries(int retries);
+	void setRetries(int retries);
 	
-	public int getNumberOfCommands();
+	int getNumberOfCommands();
 
 	void addProcessId(String procId);
 	
 	List<String> getProcessId();
 	
-	public JSONObject toJSON();
+	JSONObject toJSON();
 	
-	public TaskState getState();
+	TaskState getState();
 
-	public void setState(TaskState state);
+	void setState(TaskState state);
 
-	public String getUUID();
+	String getUUID();
 }

@@ -20,19 +20,18 @@ public class VomsTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 			+ "voms_certificate_file_path";
 	private static final String VOMS_CERTIFICATE_PASSWORD = AppPropertiesConstants.INFRA_AUTH_TOKEN_PREFIX
 			+ "voms_certificate_password";
-	private static final String VOMS_SERVER = AppPropertiesConstants.INFRA_AUTH_TOKEN_PREFIX + "voms_server";
+	private static final String VOMS_SERVER = AppPropertiesConstants.INFRA_AUTH_TOKEN_PREFIX
+			+ "voms_server";
 	private static final Logger LOGGER = Logger.getLogger(VomsTokenUpdatePlugin.class);
 	private static final Token.User DEFAULT_USER = new Token.User("9999", "User");
 
 	private final String vomsServer;
 	private final String password;
-	private Properties properties;
 
 	public VomsTokenUpdatePlugin(Properties properties) {
 		super(properties);
 		this.vomsServer = properties.getProperty(VOMS_SERVER);
 		this.password = properties.getProperty(VOMS_CERTIFICATE_PASSWORD);
-		this.properties = properties;
 	}
 
 	@Override
@@ -43,7 +42,8 @@ public class VomsTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 		} catch (Throwable e) {
 			LOGGER.error("Error while setting token.", e);
 			try {
-				return createNewTokenFromFile(properties.getProperty(VOMS_CERTIFICATE_FILE));
+				return createNewTokenFromFile(
+						super.getProperties().getProperty(VOMS_CERTIFICATE_FILE));
 			} catch (IOException e1) {
 				LOGGER.error("Error while getting token from file.", e);
 			}
@@ -56,9 +56,10 @@ public class VomsTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 		VomsIdentityPlugin vomsIdentityPlugin = new VomsIdentityPlugin(new Properties());
 
 		HashMap<String, String> credentials = new HashMap<String, String>();
-		credentials.put("password", password);
-		credentials.put("serverName", vomsServer);
-		LOGGER.debug("Creating token update with serverName=" + vomsServer + " and password=" + password);
+		credentials.put("password", this.password);
+		credentials.put("serverName", this.vomsServer);
+		LOGGER.debug("Creating token update with serverName=" + this.vomsServer + " and password="
+				+ this.password);
 
 		Token token = vomsIdentityPlugin.createToken(credentials);
 		LOGGER.debug("VOMS proxy updated. New proxy is " + token.toString());
@@ -66,16 +67,20 @@ public class VomsTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 		return token;
 	}
 
-	protected Token createNewTokenFromFile(String certificateFilePath) throws FileNotFoundException, IOException {
+	protected Token createNewTokenFromFile(String certificateFilePath)
+			throws FileNotFoundException, IOException {
 
-		String certificate = IOUtils.toString(new FileInputStream(certificateFilePath)).replaceAll("\n", "");
+		String certificate = IOUtils.toString(new FileInputStream(certificateFilePath))
+				.replaceAll("\n", "");
 		Date date = new Date(System.currentTimeMillis() + (long) Math.pow(10, 9));
 
 		return new Token(certificate, DEFAULT_USER, date, new HashMap<String, String>());
 	}
-	
+
 	@Override
 	public void validateProperties() throws BlowoutException {
+		Properties properties = super.getProperties();
+
 		if (!properties.containsKey(VOMS_CERTIFICATE_FILE)) {
 			throw new BlowoutException(
 					"Required property " + VOMS_CERTIFICATE_FILE + " was not set");
@@ -87,9 +92,8 @@ public class VomsTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 		}
 
 		if (!properties.containsKey(VOMS_SERVER)) {
-			throw new BlowoutException("Required property " + VOMS_SERVER
-					+ " was not set");
+			throw new BlowoutException("Required property " + VOMS_SERVER + " was not set");
 		}
 	}
-	
+
 }

@@ -26,26 +26,20 @@ public class KeystoneTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 	private final String tenantname;
 	private final String password;
 	private final String authUrl;
-	private Properties properties;
 
 	public KeystoneTokenUpdatePlugin(Properties properties) {
-
 		super(properties);
-
-		this.properties = properties;
 
 		this.username = properties.getProperty(FOGBOW_KEYSTONE_USERNAME);
 		this.tenantname = properties.getProperty(FOGBOW_KEYSTONE_TENANTNAME);
 		this.password = properties.getProperty(FOGBOW_KEYSTONE_PASSWORD);
 		this.authUrl = properties.getProperty(FOGBOW_KEYSTONE_AUTH_URL);
-		
 	}
 
 	@Override
 	public Token generateToken() {
-
 		try {
-			return createToken(this.properties);
+			return createToken();
 		} catch (Throwable e) {
 			LOGGER.error("Error while setting token.", e);
 		}
@@ -53,19 +47,17 @@ public class KeystoneTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 	}
 
 	protected Token createToken() {
-		return createToken(new Properties());
-	}
-
-	protected Token createToken(Properties properties) {
-		KeystoneIdentityPlugin keystoneIdentityPlugin = new KeystoneIdentityPlugin(properties);
+		KeystoneIdentityPlugin keystoneIdentityPlugin = new KeystoneIdentityPlugin(
+				super.getProperties());
 
 		HashMap<String, String> credentials = new HashMap<String, String>();
 
-		credentials.put(KeystoneIdentityPlugin.AUTH_URL, authUrl);
-		credentials.put(KeystoneIdentityPlugin.USERNAME, username);
-		credentials.put(KeystoneIdentityPlugin.PASSWORD, password);
-		credentials.put(KeystoneIdentityPlugin.TENANT_NAME, tenantname);
-		LOGGER.debug("Creating token update with USERNAME=" + username + " and PASSWORD=" + password);
+		credentials.put(KeystoneIdentityPlugin.AUTH_URL, this.authUrl);
+		credentials.put(KeystoneIdentityPlugin.USERNAME, this.username);
+		credentials.put(KeystoneIdentityPlugin.PASSWORD, this.password);
+		credentials.put(KeystoneIdentityPlugin.TENANT_NAME, this.tenantname);
+		LOGGER.debug("Creating token update with USERNAME=" + this.username + " and PASSWORD="
+				+ this.password);
 
 		Token token = keystoneIdentityPlugin.createToken(credentials);
 		LOGGER.debug("Keystone cert updated. New cert is " + token.toString());
@@ -75,17 +67,23 @@ public class KeystoneTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 
 	@Override
 	public void validateProperties() throws BlowoutException {
+		Properties properties = super.getProperties();
+		
 		if (!properties.containsKey(FOGBOW_KEYSTONE_USERNAME)) {
-			throw new BlowoutException("Required property " + FOGBOW_KEYSTONE_USERNAME + " was not set");
+			throw new BlowoutException(
+					"Required property " + FOGBOW_KEYSTONE_USERNAME + " was not set");
 		}
 		if (!properties.containsKey(FOGBOW_KEYSTONE_TENANTNAME)) {
-			throw new BlowoutException("Required property " + FOGBOW_KEYSTONE_TENANTNAME + " was not set");
+			throw new BlowoutException(
+					"Required property " + FOGBOW_KEYSTONE_TENANTNAME + " was not set");
 		}
 		if (!properties.containsKey(FOGBOW_KEYSTONE_PASSWORD)) {
-			throw new BlowoutException("Required property " + FOGBOW_KEYSTONE_PASSWORD + " was not set");
+			throw new BlowoutException(
+					"Required property " + FOGBOW_KEYSTONE_PASSWORD + " was not set");
 		}
 		if (!properties.containsKey(FOGBOW_KEYSTONE_AUTH_URL)) {
-			throw new BlowoutException("Required property " + FOGBOW_KEYSTONE_AUTH_URL + " was not set");
+			throw new BlowoutException(
+					"Required property " + FOGBOW_KEYSTONE_AUTH_URL + " was not set");
 		}
 	}
 }

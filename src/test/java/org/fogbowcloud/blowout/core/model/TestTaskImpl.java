@@ -10,8 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 public class TestTaskImpl {
 	
@@ -26,7 +28,6 @@ public class TestTaskImpl {
 	String taskId;
 	Specification spec;
 	Task task;
-	
 	
 	@Before
 	public void setUp(){
@@ -113,6 +114,36 @@ public class TestTaskImpl {
 		assertEquals(2, epilogueCommands.size());
 		assert(epilogueCommands.contains(epilogueCommand));
 		assert(epilogueCommands.contains(epilogueCommand2));
+	}
+	
+	@Test
+	public void testExecThreeCommandsFirstTimedout() {
+		
+		String FAKE_COMMAND = "fakeCommand";
+		String FAKE_COMMAND2 = "fakeCommand2";
+		String FAKE_COMMAND3 = "fakeCommand3";
+		
+		TaskExecutionResult ter = new TaskExecutionResult();
+		ter.finish(124);
+		
+		String taskId = FAKE_TASK_ID;
+		Specification spec = mock(Specification.class);
+		List<Command> commandList = new ArrayList<Command>();
+		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
+		commandList.add(new Command(FAKE_COMMAND2, Command.Type.LOCAL));
+		commandList.add(new Command(FAKE_COMMAND3, Command.Type.LOCAL));
+		FogbowResource resource = mock(FogbowResource.class);
+
+		TaskProcessImpl tp = spy(new TaskProcessImpl(taskId, commandList, spec, "FAKE-ID"));
+
+		doReturn(ter).when(tp).executeCommandString(FAKE_COMMAND, Command.Type.LOCAL, resource);
+
+		tp.executeTask(resource);
+
+		Mockito.verify(tp).executeCommandString(FAKE_COMMAND, Command.Type.LOCAL, resource);
+		Mockito.verify(tp, Mockito.never()).executeCommandString(FAKE_COMMAND2, Command.Type.LOCAL, resource);
+		Mockito.verify(tp, Mockito.never()).executeCommandString(FAKE_COMMAND3, Command.Type.LOCAL, resource);
+		assertEquals(tp.getStatus(), TaskState.TIMEDOUT);
 	}
 	
 }

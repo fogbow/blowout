@@ -12,7 +12,7 @@ int main(int argc, char **argv) {
 
   buffer[0] = '\0';
 
-  if (argc < 4) exit(1);
+  if (argc < 4) exit(17);
 
   for (i = 3; i < argc; i++) sprintf(buffer, "%s %s", buffer, argv[i]);
 

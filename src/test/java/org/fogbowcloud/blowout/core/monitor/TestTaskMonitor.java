@@ -26,26 +26,27 @@ import org.fogbowcloud.blowout.core.model.TaskState;
 import org.fogbowcloud.blowout.infrastructure.manager.DefaultInfrastructureManager;
 import org.fogbowcloud.blowout.infrastructure.model.FogbowResource;
 import org.fogbowcloud.blowout.infrastructure.model.ResourceState;
-import org.fogbowcloud.blowout.pool.AbstractResource;
+import org.fogbowcloud.blowout.infrastructure.model.AbstractResource;
 import org.fogbowcloud.blowout.pool.BlowoutPool;
 import org.fogbowcloud.blowout.pool.DefaultBlowoutPool;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 
 public class TestTaskMonitor {
 
 	private static final String FAKE_UUID = "1234";
 	private static final String FAKE_ID = "fakeId";
-	public TaskMonitor taskMon;
-	public BlowoutPool pool;
-	public Specification spec;
+	private TaskMonitor taskMon;
+	private BlowoutPool pool;
+	private Specification spec;
 	
 	@Before
 	public void setUp(){
 		pool = mock(BlowoutPool.class);
-		this.taskMon = spy(new TaskMonitor(pool, 0));
+		this.taskMon = spy(new TaskMonitor(pool, 100));
 		spec = mock(Specification.class);
 	}
 	
@@ -78,7 +79,7 @@ public class TestTaskMonitor {
 	public void testGetTaskStateCompleted() {
 		// set up
 		TaskImpl taskImpl = new TaskImpl("task-id", spec, FAKE_UUID);
-		taskImpl.setState(TaskState.FINNISHED);
+		taskImpl.setState(TaskState.FINISHED);
 		taskImpl.finish();
 		
 		Map<Task, TaskProcess> runningTasks = mock(Map.class);
@@ -126,7 +127,7 @@ public class TestTaskMonitor {
 
 		TaskImpl taskOne = new TaskImpl("task-one-id", spec, FAKE_UUID);
 		
-		List<Task> taskList = new ArrayList<Task>();
+		List<Task> taskList = new ArrayList<>();
 		taskList.add(taskOne);
 		
 		blowoutPool.addTasks(taskList);
@@ -141,9 +142,9 @@ public class TestTaskMonitor {
 		
 		taskProcessOne.setResource(resourceOne);
 		
-		taskProcessOne.setStatus(TaskState.FINNISHED);
+		taskProcessOne.setStatus(TaskState.FINISHED);
 		
-		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
+		Map<Task, TaskProcess> runningTasks = new HashMap<>();
 		runningTasks.put(taskOne, taskProcessOne);
 		
 		TaskMonitor taskMon = new TaskMonitor(blowoutPool, 3000);
@@ -162,7 +163,7 @@ public class TestTaskMonitor {
 		TaskProcess fakeProcess = mock(TaskProcess.class);
 		doReturn(TaskState.RUNNING).when(fakeProcess).getStatus();
 		AbstractResource fakeResource = mock(AbstractResource.class);
-		List<TaskProcess> runningPrc = new ArrayList<TaskProcess>();
+		List<TaskProcess> runningPrc = new ArrayList<>();
 		runningPrc.add(fakeProcess);
 		doReturn(runningPrc).when(this.taskMon).getRunningProcesses();
 		
@@ -182,10 +183,10 @@ public class TestTaskMonitor {
 		doReturn(FAKE_ID).when(fakeProcess).getTaskId();
 		doReturn(fakeTask).when(this.taskMon).getTaskById(FAKE_ID);
 		doReturn(fakeResource).when(fakeProcess).getResource();
-		List<TaskProcess> runningPrc = new ArrayList<TaskProcess>();
+		List<TaskProcess> runningPrc = new ArrayList<>();
 		runningPrc.add(fakeProcess);
 		doReturn(runningPrc).when(this.taskMon).getRunningProcesses();
-		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
+		Map<Task, TaskProcess> runningTasks = new HashMap<>();
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.taskMon).getRunningTasks();
 		
@@ -199,16 +200,16 @@ public class TestTaskMonitor {
 	public void testProcMonProcFinnished() {
 		Task fakeTask = mock(Task.class);
 		TaskProcess fakeProcess = mock(TaskProcess.class);
-		doReturn(TaskState.FINNISHED).when(fakeProcess).getStatus();
+		doReturn(TaskState.FINISHED).when(fakeProcess).getStatus();
 		AbstractResource fakeResource = mock(AbstractResource.class);
 		doReturn(FAKE_ID).when(fakeTask).getId();
 		doReturn(FAKE_ID).when(fakeProcess).getTaskId();
 		doReturn(fakeTask).when(this.taskMon).getTaskById(FAKE_ID);
 		doReturn(fakeResource).when(fakeProcess).getResource();
-		List<TaskProcess> runningPrc = new ArrayList<TaskProcess>();
+		List<TaskProcess> runningPrc = new ArrayList<>();
 		runningPrc.add(fakeProcess);
 		doReturn(runningPrc).when(this.taskMon).getRunningProcesses();
-		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
+		Map<Task, TaskProcess> runningTasks = new HashMap<>();
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.taskMon).getRunningTasks();
 		
@@ -225,19 +226,30 @@ public class TestTaskMonitor {
 		AbstractResource fakeResource = mock(AbstractResource.class);
 		doReturn(FAKE_ID).when(fakeTask).getId();
 		doReturn(FAKE_ID).when(fakeProcess).getTaskId();
-		List<TaskProcess> runningPrc = new ArrayList<TaskProcess>();
+		List<TaskProcess> runningPrc = new ArrayList<>();
 		runningPrc.add(fakeProcess);
 		doReturn(runningPrc).when(this.taskMon).getRunningProcesses();
 		doNothing().when(pool).updateResource(fakeResource, ResourceState.BUSY);
 		ExecutorService execServ = mock(ExecutorService.class);
 		doReturn(execServ).when(this.taskMon).getExecutorService();
 		doReturn(mock(Future.class)).when(execServ).submit(any(Runnable.class));
-		Map<Task, TaskProcess> runningTasks = new HashMap<Task, TaskProcess>();
+		Map<Task, TaskProcess> runningTasks = new HashMap<>();
 		runningTasks.put(fakeTask, fakeProcess);
 		doReturn(runningTasks).when(this.taskMon).getRunningTasks();
 		
 		this.taskMon.runTask(fakeTask, fakeResource);
-		
+	}
+
+	@Test
+	public void testStopThread() throws InterruptedException {
+        Mockito.doNothing().when(taskMon).procMon();
+        Assert.assertFalse("Task monitor shouldn't have started yet", taskMon.isRunning());
+        taskMon.start();
+        Thread.yield();
+        Assert.assertTrue("Task monitor should have started yet", taskMon.isRunning());
+        taskMon.stop();
+        Thread.sleep(100);
+        Assert.assertFalse("Task monitor should have stopped", taskMon.isRunning());
 	}
 	
 }

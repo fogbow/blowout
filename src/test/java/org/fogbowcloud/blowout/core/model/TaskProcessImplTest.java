@@ -23,13 +23,12 @@ public class TaskProcessImplTest {
 
 	@Test
 	public void testExecOneCommand() {
-		String taskId = FAKE_TASK_ID;
 		Specification spec = mock(Specification.class);
-		List<Command> commandList = new ArrayList<Command>();
+		List<Command> commandList = new ArrayList<>();
 		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
 		FogbowResource resource = mock(FogbowResource.class);
 
-		TaskProcessImpl tp = spy(new TaskProcessImpl(taskId, commandList, spec, FAKE_UUID));
+		TaskProcessImpl tp = spy(new TaskProcessImpl(FAKE_TASK_ID, commandList, spec, FAKE_UUID));
 
 		TaskExecutionResult terSuccess = new TaskExecutionResult();
 		terSuccess.finish(0);
@@ -39,18 +38,17 @@ public class TaskProcessImplTest {
 		tp.executeTask(resource);
 
 		verify(tp).executeCommandString(FAKE_COMMAND, Command.Type.LOCAL, resource);
-		assertEquals(tp.getStatus(), TaskState.FINNISHED);
+		assertEquals(tp.getStatus(), TaskState.FINISHED);
 	}
 
 	@Test
 	public void testExecOneCommandItFails() {
-		String taskId = FAKE_TASK_ID;
 		Specification spec = mock(Specification.class);
-		List<Command> commandList = new ArrayList<Command>();
+		List<Command> commandList = new ArrayList<>();
 		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
 		FogbowResource resource = mock(FogbowResource.class);
 
-		TaskProcessImpl tp = spy(new TaskProcessImpl(taskId, commandList, spec, FAKE_UUID));
+		TaskProcessImpl tp = spy(new TaskProcessImpl(FAKE_TASK_ID, commandList, spec, FAKE_UUID));
 
 		TaskExecutionResult terFail = new TaskExecutionResult();
 		terFail.finish(1);
@@ -65,15 +63,14 @@ public class TaskProcessImplTest {
 
 	@Test
 	public void testExecThreeCommands() {
-		String taskId = FAKE_TASK_ID;
 		Specification spec = mock(Specification.class);
-		List<Command> commandList = new ArrayList<Command>();
+		List<Command> commandList = new ArrayList<>();
 		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
 		commandList.add(new Command(FAKE_COMMAND2, Command.Type.LOCAL));
 		commandList.add(new Command(FAKE_COMMAND3, Command.Type.LOCAL));
 		FogbowResource resource = mock(FogbowResource.class);
 
-		TaskProcessImpl tp = spy(new TaskProcessImpl(taskId, commandList, spec, FAKE_UUID));
+		TaskProcessImpl tp = spy(new TaskProcessImpl(FAKE_TASK_ID, commandList, spec, FAKE_UUID));
 
 		TaskExecutionResult terSuccess = new TaskExecutionResult();
 		terSuccess.finish(0);
@@ -87,20 +84,19 @@ public class TaskProcessImplTest {
 		verify(tp).executeCommandString(FAKE_COMMAND, Command.Type.LOCAL, resource);
 		verify(tp).executeCommandString(FAKE_COMMAND2, Command.Type.LOCAL, resource);
 		verify(tp).executeCommandString(FAKE_COMMAND3, Command.Type.LOCAL, resource);
-		assertEquals(tp.getStatus(), TaskState.FINNISHED);
+		assertEquals(tp.getStatus(), TaskState.FINISHED);
 	}
 
 	@Test
 	public void testExecThreeCommandsSecondFails() {
-		String taskId = FAKE_TASK_ID;
 		Specification spec = mock(Specification.class);
-		List<Command> commandList = new ArrayList<Command>();
+		List<Command> commandList = new ArrayList<>();
 		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
 		commandList.add(new Command(FAKE_COMMAND2, Command.Type.LOCAL));
 		commandList.add(new Command(FAKE_COMMAND3, Command.Type.LOCAL));
 		FogbowResource resource = mock(FogbowResource.class);
 
-		TaskProcessImpl tp = spy(new TaskProcessImpl(taskId, commandList, spec, FAKE_UUID));
+		TaskProcessImpl tp = spy(new TaskProcessImpl(FAKE_TASK_ID, commandList, spec, FAKE_UUID));
 		
 		TaskExecutionResult terSuccess = new TaskExecutionResult();
 		terSuccess.finish(0);
@@ -123,16 +119,15 @@ public class TaskProcessImplTest {
 		
 		TaskExecutionResult ter = new TaskExecutionResult();
 		ter.finish(1);
-		
-		String taskId = FAKE_TASK_ID;
+
 		Specification spec = mock(Specification.class);
-		List<Command> commandList = new ArrayList<Command>();
+		List<Command> commandList = new ArrayList<>();
 		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
 		commandList.add(new Command(FAKE_COMMAND2, Command.Type.LOCAL));
 		commandList.add(new Command(FAKE_COMMAND3, Command.Type.LOCAL));
 		FogbowResource resource = mock(FogbowResource.class);
 
-		TaskProcessImpl tp = spy(new TaskProcessImpl(taskId, commandList, spec, FAKE_UUID));
+		TaskProcessImpl tp = spy(new TaskProcessImpl(FAKE_TASK_ID, commandList, spec, FAKE_UUID));
 
 		doReturn(ter).when(tp).executeCommandString(FAKE_COMMAND, Command.Type.LOCAL, resource);
 
@@ -144,5 +139,28 @@ public class TaskProcessImplTest {
 		assertEquals(tp.getStatus(), TaskState.FAILED);
 	}
 
+	@Test
+	public void testExecThreeCommandsFirstTimedout() {
+		
+		TaskExecutionResult ter = new TaskExecutionResult();
+		ter.finish(124);
 
+		Specification spec = mock(Specification.class);
+		List<Command> commandList = new ArrayList<>();
+		commandList.add(new Command(FAKE_COMMAND, Command.Type.LOCAL));
+		commandList.add(new Command(FAKE_COMMAND2, Command.Type.LOCAL));
+		commandList.add(new Command(FAKE_COMMAND3, Command.Type.LOCAL));
+		FogbowResource resource = mock(FogbowResource.class);
+
+		TaskProcessImpl tp = spy(new TaskProcessImpl(FAKE_TASK_ID, commandList, spec, FAKE_UUID));
+
+		doReturn(ter).when(tp).executeCommandString(FAKE_COMMAND, Command.Type.LOCAL, resource);
+
+		tp.executeTask(resource);
+
+		verify(tp).executeCommandString(FAKE_COMMAND, Command.Type.LOCAL, resource);
+		verify(tp, never()).executeCommandString(FAKE_COMMAND2, Command.Type.LOCAL, resource);
+		verify(tp, never()).executeCommandString(FAKE_COMMAND3, Command.Type.LOCAL, resource);
+		assertEquals(tp.getStatus(), TaskState.TIMEDOUT);
+	}
 }

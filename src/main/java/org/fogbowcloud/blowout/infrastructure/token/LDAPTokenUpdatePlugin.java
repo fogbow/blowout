@@ -32,14 +32,13 @@ public class LDAPTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 	public LDAPTokenUpdatePlugin(Properties properties) {
 		super(properties);
 
-		userName = properties.getProperty(LDAP_USERNAME);
-		password = properties.getProperty(LDAP_PASSWORD);
-		ldapUrl = properties.getProperty(LDAP_AUTH_URL);
-		ldapBase = properties.getProperty(LDAP_BASE);
-		encrypt = properties.getProperty(LDAP_ENCRYPT_TYPE);
-		privateKeyPath = properties.getProperty(LDAP_PRIVATE_KEY);
-		publicKeyPath = properties.getProperty(LDAP_PUBLIC_KEY);
-
+		this.userName = properties.getProperty(LDAP_USERNAME);
+		this.password = properties.getProperty(LDAP_PASSWORD);
+		this.ldapUrl = properties.getProperty(LDAP_AUTH_URL);
+		this.ldapBase = properties.getProperty(LDAP_BASE);
+		this.encrypt = properties.getProperty(LDAP_ENCRYPT_TYPE);
+		this.privateKeyPath = properties.getProperty(LDAP_PRIVATE_KEY);
+		this.publicKeyPath = properties.getProperty(LDAP_PUBLIC_KEY);
 	}
 
 	@Override
@@ -49,15 +48,16 @@ public class LDAPTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 
 		HashMap<String, String> credentials = new HashMap<String, String>();
 
-		credentials.put(LdapIdentityPlugin.CRED_USERNAME, userName);
-		credentials.put(LdapIdentityPlugin.CRED_PASSWORD, password);
-		credentials.put(LdapIdentityPlugin.CRED_AUTH_URL, ldapUrl);
-		credentials.put(LdapIdentityPlugin.CRED_LDAP_BASE, ldapBase);
-		credentials.put(LdapIdentityPlugin.CRED_LDAP_ENCRYPT, encrypt);
-		credentials.put(LdapIdentityPlugin.CRED_PRIVATE_KEY, privateKeyPath);
-		credentials.put(LdapIdentityPlugin.CRED_PUBLIC_KEY, publicKeyPath);
+		credentials.put(LdapIdentityPlugin.CRED_USERNAME, this.userName);
+		credentials.put(LdapIdentityPlugin.CRED_PASSWORD, this.password);
+		credentials.put(LdapIdentityPlugin.CRED_AUTH_URL, this.ldapUrl);
+		credentials.put(LdapIdentityPlugin.CRED_LDAP_BASE, this.ldapBase);
+		credentials.put(LdapIdentityPlugin.CRED_LDAP_ENCRYPT, this.encrypt);
+		credentials.put(LdapIdentityPlugin.CRED_PRIVATE_KEY, this.privateKeyPath);
+		credentials.put(LdapIdentityPlugin.CRED_PUBLIC_KEY, this.publicKeyPath);
 
-		LOGGER.debug("Creating token update with USERNAME=" + userName + " and PASSWORD=" + password);
+		LOGGER.debug("Creating token update with USERNAME=" + this.userName + " and PASSWORD="
+				+ this.password);
 
 		Token token = ldapIdentityPlugin.createToken(credentials);
 		LOGGER.debug("LDAP token updated. New token is " + token.toString());
@@ -67,6 +67,8 @@ public class LDAPTokenUpdatePlugin extends AbstractTokenUpdatePlugin {
 
 	@Override
 	public void validateProperties() throws BlowoutException {
+		Properties properties = super.getProperties();
+		
 		if (!properties.containsKey(LDAP_USERNAME)) {
 			throw new BlowoutException("Required property " + LDAP_USERNAME + " was not set");
 		}
